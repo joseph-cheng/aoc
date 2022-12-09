@@ -5,20 +5,19 @@ const BUF_SIZE = 4096;
 //day 2
 const PACKET_MARKER_SIZE = 14;
 
-fn check_if_unique(line: []const u8, allocator: std.mem.Allocator) !bool {
-    var map = std.AutoHashMap(u8, bool).init(allocator);
+fn check_if_unique(line: []const u8) bool {
+    var chars_seen : u32 = 0;
+    var bit: u32 = 1;
     for (line) |char| {
-        if (map.get(char) orelse false) {
+        if ((chars_seen & (bit << (char - 'a'))) > 0) {
             return false;
         }
-        try map.put(char, true);
+        chars_seen |= (1 << (char - 'a'));
     }
     return true;
 }
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
     var args = std.process.args();
     if (!args.skip()) {
         return;
@@ -37,7 +36,7 @@ pub fn main() !void {
     var line = try in_stream.readUntilDelimiterOrEof(&buf, '\n') orelse "";
     var idx: usize = 0;
     while (idx < line.len - PACKET_MARKER_SIZE) {
-        if (try check_if_unique(line[idx..idx + PACKET_MARKER_SIZE], allocator)) {
+        if (check_if_unique(line[idx..idx + PACKET_MARKER_SIZE])) {
             std.debug.print("{}\n", .{idx + PACKET_MARKER_SIZE});
             break;
         }
